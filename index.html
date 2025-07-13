@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lupa Terra Web</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <img src="logo.png" alt="Logo" class="logo">
+        <span class="brand">Lupa Terra Web</span>
+    </header>
+    <div id="videoContainer">
+        <video id="video" autoplay playsinline muted></video>
+        <canvas id="glCanvas"></canvas>
+    </div>
+    <div id="brightnessGroup" class="fab fab-top-left">
+        <button id="brightnessUp">↑</button>
+        <span id="brightnessValue">1</span>
+        <button id="brightnessDown">↓</button>
+    </div>
+    <div id="zoomGroup" class="fab fab-bottom-left">
+        <button id="zoomIn">+</button>
+        <span id="zoomValue">1</span>
+        <button id="zoomOut">-</button>
+    </div>
+    <div id="colorGroup" class="fab fab-top-right">
+        <button id="colorPrev">←</button>
+        <span id="colorValue">1</span>
+        <button id="colorNext">→</button>
+    </div>
+    <div id="actionsGroup" class="fab fab-bottom-right">
+        <button id="cameraBtn">Cam</button>
+        <select id="cameraSelect" style="display: none;"></select>
+    </div>
+    <div id="redBtn" class="fab fab-center">
+        <button>Menu</button>
+    </div>
+    <div id="secondMenu" class="menu-popup">
+        <button id="secondFreeze">❄️ Congelar</button>
+        <button id="secondSave">💾 Salvar</button>
+        <button id="infoBtn">ℹ️ Info</button>
+        <button id="resetBtn">↺ Reset</button>
+        <button id="flashBtn">🔦 Lanterna</button>
+        <button id="muteBtn">🔇 Mute</button>
+        <button id="fpsBtn">ℹ️ FPS</button>
+    </div>
+    <footer>
+        <p>Versão Melhorada - Acessível e Responsiva</p>
+    </footer>
+    <script src="script.js"></script>
+</body>
+</html>
