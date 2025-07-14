@@ -3,40 +3,96 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lupa Terra Web</title>
+    <title>Lupa Terra Web - Câmera com Filtros</title>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="description" content="Aplicativo de câmera com zoom, filtros e controles avançados">
+    <meta name="theme-color" content="#ffe600">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Lupa Terra">
+    <meta name="msapplication-TileColor" content="#181c20">
+    <meta name="msapplication-TileImage" content="/icon-144x144.png">
+    
+    <!-- Apple Touch Icons -->
+    <link rel="apple-touch-icon" href="/icon-152x152.png">
+    <link rel="apple-touch-icon" sizes="72x72" href="/icon-72x72.png">
+    <link rel="apple-touch-icon" sizes="96x96" href="/icon-96x96.png">
+    <link rel="apple-touch-icon" sizes="128x128" href="/icon-128x128.png">
+    <link rel="apple-touch-icon" sizes="144x144" href="/icon-144x144.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="/icon-152x152.png">
+    <link rel="apple-touch-icon" sizes="192x192" href="/icon-192x192.png">
+    <link rel="apple-touch-icon" sizes="384x384" href="/icon-384x384.png">
+    <link rel="apple-touch-icon" sizes="512x512" href="/icon-512x512.png">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" sizes="32x32" href="/icon-72x72.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/icon-72x72.png">
+    
+    <!-- Manifest -->
+    <link rel="manifest" href="/manifest.json">
+    
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <!-- Banner de Instalação PWA -->
+    <div id="installBanner" class="install-banner" style="display: none;">
+        <div class="install-content">
+            <img src="icon-72x72.png" alt="Lupa Terra" class="install-icon">
+            <div class="install-text">
+                <strong>Instalar Lupa Terra</strong>
+                <p>Adicione à tela inicial para acesso rápido</p>
+            </div>
+            <div class="install-buttons">
+                <button id="installBtn" class="install-btn-primary">Instalar</button>
+                <button id="dismissBtn" class="install-btn-secondary">Agora não</button>
+            </div>
+        </div>
+    </div>
+
     <header>
-        <img src="logo.png" alt="Logo" class="logo">
-        <span class="brand">Lupa Terra Web</span>
+        <img src="logo.jpg" alt="Terra Eletrônica" class="logo">
+        <span class="brand">LUPA TERRA WEB</span>
     </header>
+
     <div id="videoContainer">
-        <video id="video" autoplay playsinline muted></video>
+        <video id="video" autoplay muted playsinline></video>
         <canvas id="glCanvas"></canvas>
     </div>
-    <div id="brightnessGroup" class="fab fab-top-left">
-        <button id="brightnessUp">↑</button>
-        <span id="brightnessValue">1</span>
-        <button id="brightnessDown">↓</button>
-    </div>
-    <div id="zoomGroup" class="fab fab-bottom-left">
-        <button id="zoomIn">+</button>
+
+    <!-- Controles de Zoom -->
+    <div id="zoomGroup" class="fab fab-top-left">
+        <button id="zoomIn">▲</button>
         <span id="zoomValue">1</span>
-        <button id="zoomOut">-</button>
+        <button id="zoomOut">▼</button>
     </div>
+
+    <!-- Controles de Brilho -->
+    <div id="brightnessGroup" class="fab fab-bottom-left">
+        <button id="brightnessUp">▲</button>
+        <span id="brightnessValue">1</span>
+        <button id="brightnessDown">▼</button>
+    </div>
+
+    <!-- Controles de Filtro -->
     <div id="colorGroup" class="fab fab-top-right">
-        <button id="colorPrev">←</button>
-        <span id="colorValue">1</span>
-        <button id="colorNext">→</button>
+        <button id="colorPrev">◀️</button>
+        <span id="colorValue">normal</span>
+        <button id="colorNext">▶️</button>
     </div>
-    <div id="actionsGroup" class="fab fab-bottom-right">
-        <button id="cameraBtn">Cam</button>
+
+    <!-- Botão Central da Câmera -->
+    <div id="actionsGroup" class="fab fab-center">
+        <button id="cameraBtn">📷</button>
         <select id="cameraSelect" style="display: none;"></select>
     </div>
-    <div id="redBtn" class="fab fab-center">
-        <button>Menu</button>
+
+    <!-- Botão Menu -->
+    <div class="fab fab-bottom-right">
+        <button id="redBtn">Menu</button>
     </div>
+
+    <!-- Menu Popup -->
     <div id="secondMenu" class="menu-popup">
         <button id="secondFreeze">❄️ Congelar</button>
         <button id="secondSave">💾 Salvar</button>
@@ -46,9 +102,81 @@
         <button id="muteBtn">🔇 Mute</button>
         <button id="fpsBtn">ℹ️ FPS</button>
     </div>
-    <footer>
-        <p>Versão Melhorada - Acessível e Responsiva</p>
-    </footer>
+
+    <script src="filters.js"></script>
     <script src="script.js"></script>
+    <script>
+        // PWA Installation Logic
+        let deferredPrompt;
+        const installBanner = document.getElementById('installBanner');
+        const installBtn = document.getElementById('installBtn');
+        const dismissBtn = document.getElementById('dismissBtn');
+
+        // Detectar evento de instalação
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            
+            // Mostrar banner de instalação após 3 segundos
+            setTimeout(() => {
+                if (!localStorage.getItem('pwa-dismissed')) {
+                    installBanner.style.display = 'block';
+                }
+            }, 3000);
+        });
+
+        // Botão de instalação
+        installBtn.addEventListener('click', async () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                
+                if (outcome === 'accepted') {
+                    console.log('PWA instalada');
+                }
+                
+                deferredPrompt = null;
+                installBanner.style.display = 'none';
+            }
+        });
+
+        // Botão de dispensar
+        dismissBtn.addEventListener('click', () => {
+            installBanner.style.display = 'none';
+            localStorage.setItem('pwa-dismissed', 'true');
+        });
+
+        // Registrar Service Worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(registration => {
+                        console.log('Service Worker registrado:', registration);
+                        
+                        // Verificar atualizações
+                        registration.addEventListener('updatefound', () => {
+                            const newWorker = registration.installing;
+                            newWorker.addEventListener('statechange', () => {
+                                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                    // Nova versão disponível
+                                    if (confirm('Nova versão disponível! Recarregar?')) {
+                                        window.location.reload();
+                                    }
+                                }
+                            });
+                        });
+                    })
+                    .catch(error => {
+                        console.error('Erro ao registrar Service Worker:', error);
+                    });
+            });
+        }
+
+        // Detectar quando o app foi instalado
+        window.addEventListener('appinstalled', () => {
+            console.log('PWA foi instalada');
+            installBanner.style.display = 'none';
+        });
+    </script>
 </body>
 </html>

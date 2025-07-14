@@ -1,98 +1,180 @@
 body {
-  background: #181c20;
-  color: #fff;
-  font-family: Arial, sans-serif;
-  margin: 0;
-  min-height: 100vh;
-  overflow: hidden;
+    background: #181c20;
+    color: #fff;
+    font-family: Arial, sans-serif;
+    margin: 0;
+    min-height: 100vh;
+    overflow: hidden;
 }
 
 header {
-  text-align: center;
-  padding: 24px 0 10px 0;
-  background: #222831;
-  box-shadow: 0 2px 8px #0005;
-  position: fixed;
-  width: 100%;
-  top: 0;
-  z-index: 30;
-  transition: opacity 0.4s;
+    text-align: center;
+    padding: 24px 0 10px 0;
+    background: #222831;
+    box-shadow: 0 2px 8px #0005;
+    position: fixed;
+    width: 100%;
+    top: 0;
+    z-index: 30;
+    transition: opacity 0.4s;
 }
 
 .logo {
-  height: 32px;
-  vertical-align: middle;
-  margin-right: 10px;
+    height: 32px;
+    vertical-align: middle;
+    margin-right: 10px;
 }
 
 .brand {
-  color: #ffe600;
-  font-weight: bold;
-  font-size: 1.1em;
-  margin-left: 10px;
+    color: #ffe600;
+    font-weight: bold;
+    font-size: 1.1em;
+    margin-left: 10px;
+}
+
+/* PWA Install Banner */
+.install-banner {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(135deg, #ffe600, #ffd700);
+    color: #000;
+    z-index: 1000;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+    animation: slideDown 0.5s ease-out;
+}
+
+@keyframes slideDown {
+    from { transform: translateY(-100%); }
+    to { transform: translateY(0); }
+}
+
+.install-content {
+    display: flex;
+    align-items: center;
+    padding: 12px 16px;
+    gap: 12px;
+}
+
+.install-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+}
+
+.install-text {
+    flex: 1;
+}
+
+.install-text strong {
+    display: block;
+    font-size: 1.1em;
+    margin-bottom: 2px;
+}
+
+.install-text p {
+    margin: 0;
+    font-size: 0.9em;
+    opacity: 0.8;
+}
+
+.install-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+.install-btn-primary {
+    background: #000;
+    color: #fff;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.install-btn-primary:hover {
+    background: #333;
+}
+
+.install-btn-secondary {
+    background: transparent;
+    color: #000;
+    border: 1px solid #000;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.install-btn-secondary:hover {
+    background: rgba(0,0,0,0.1);
 }
 
 #videoContainer {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-  width: 100vw;
-  position: fixed;
-  top: 0;
-  left: 0;
-  z-index: 10;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    width: 100vw;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 10;
 }
 
 #video, #glCanvas {
-  width: 100vw;
-  height: 100vh;
-  background: #000;
-  border: none;
-  object-fit: cover;
-  position: absolute;
-  top: 0;
-  left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: #000;
+    border: none;
+    object-fit: cover;
+    position: absolute;
+    top: 0;
+    left: 0;
 }
 
 .fab {
-  position: fixed;
-  display: flex;
-  align-items: center;
-  background: #23272fdd;
-  border-radius: 18px;
-  box-shadow: 0 2px 8px #0007;
-  z-index: 20;
-  padding: 8px 12px;
-  gap: 6px;
-  opacity: 1;
-  transition: opacity 0.4s, transform 0.2s;
+    position: fixed;
+    display: flex;
+    align-items: center;
+    background: #23272fdd;
+    border-radius: 18px;
+    box-shadow: 0 2px 8px #0007;
+    z-index: 20;
+    padding: 8px 12px;
+    gap: 6px;
+    opacity: 1;
+    transition: opacity 0.4s, transform 0.2s;
 }
 
 .fab button {
-  background: #23272f;
-  border: none;
-  border-radius: 50%;
-  width: 38px;
-  height: 38px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: background 0.2s, transform 0.2s;
-  font-size: 1.2em;
-  color: #fff;
+    background: #23272f;
+    border: none;
+    border-radius: 50%;
+    width: 38px;
+    height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.2s;
+    font-size: 1.2em;
+    color: #fff;
 }
+
 .fab button:active {
-  transform: scale(1.15);
-  background: #393e46;
+    transform: scale(1.15);
+    background: #393e46;
 }
 
 .fab span {
-  font-size: 1.1em;
-  font-weight: bold;
-  min-width: 22px;
-  text-align: center;
+    font-size: 1.1em;
+    font-weight: bold;
+    min-width: 22px;
+    text-align: center;
 }
 
 .fab-top-left { top: 80px; left: 20px; flex-direction: column; }
@@ -102,85 +184,136 @@ header {
 .fab-center { top: 50%; left: 50%; transform: translate(-50%, -50%); border-radius: 50%; padding: 0; width: 56px; height: 56px; justify-content: center; }
 
 #actionsGroup button, #actionsGroup select {
-  margin-top: 4px;
+    margin-top: 4px;
 }
 
 #cameraSelect {
-  margin-top: 4px;
-  border-radius: 6px;
-  border: none;
-  padding: 4px 8px;
-  font-size: 1em;
+    margin-top: 4px;
+    border-radius: 6px;
+    border: none;
+    padding: 4px 8px;
+    font-size: 1em;
 }
 
 .menu-popup {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background: #23272f;
-  border-radius: 16px;
-  box-shadow: 0 4px 16px #000a;
-  padding: 24px 16px 16px 16px;
-  min-width: 240px;
-  display: none;
-  flex-direction: column;
-  z-index: 20;
-  gap: 12px;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #23272f;
+    border-radius: 16px;
+    box-shadow: 0 4px 16px #000a;
+    padding: 24px 16px 16px 16px;
+    min-width: 240px;
+    display: none;
+    flex-direction: column;
+    z-index: 20;
+    gap: 12px;
 }
+
 .menu-popup button {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: #23272f;
-  border: none;
-  color: #fff;
-  border-radius: 8px;
-  padding: 8px 12px;
-  font-size: 1em;
-  cursor: pointer;
-  transition: background 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #23272f;
+    border: none;
+    color: #fff;
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 1em;
+    cursor: pointer;
+    transition: background 0.2s;
 }
+
 .menu-popup button:active {
-  transform: scale(1.15);
-  background: #393e46;
+    transform: scale(1.15);
+    background: #393e46;
 }
 
 footer {
-  text-align: center;
-  color: #aaa;
-  font-size: 0.95em;
-  margin-top: 20px;
-  padding-bottom: 10px;
-  position: fixed;
-  width: 100%;
-  bottom: 0;
-  z-index: 30;
+    text-align: center;
+    color: #aaa;
+    font-size: 0.95em;
+    margin-top: 20px;
+    padding-bottom: 10px;
+    position: fixed;
+    width: 100%;
+    bottom: 0;
+    z-index: 30;
 }
 
 @media (max-width: 600px) {
-  #video, #glCanvas {
-    width: 100vw;
-    height: 100vh;
-  }
-  .fab {
-    padding: 5px 7px;
-  }
-  .fab button {
-    width: 30px;
-    height: 30px;
-  }
-  .fab img {
-    width: 16px;
-    height: 16px;
-  }
-  .fab-center {
-    width: 44px;
-    height: 44px;
-  }
+    #video, #glCanvas {
+        width: 100vw;
+        height: 100vh;
+    }
+    
+    .fab {
+        padding: 5px 7px;
+    }
+    
+    .fab button {
+        width: 30px;
+        height: 30px;
+    }
+    
+    .fab img {
+        width: 16px;
+        height: 16px;
+    }
+    
+    .fab-center {
+        width: 44px;
+        height: 44px;
+    }
+    
+    .install-content {
+        flex-direction: column;
+        text-align: center;
+        gap: 8px;
+    }
+    
+    .install-buttons {
+        justify-content: center;
+    }
 }
 
 .fab.hide, header.hide {
-  opacity: 0;
-  pointer-events: none;
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* Melhorias para PWA */
+@media (display-mode: standalone) {
+    header {
+        padding-top: 40px; /* Compensar status bar */
+    }
+}
+
+/* Suporte para notch em dispositivos móveis */
+@supports (padding: max(0px)) {
+    header {
+        padding-left: max(16px, env(safe-area-inset-left));
+        padding-right: max(16px, env(safe-area-inset-right));
+    }
+    
+    .fab-top-left {
+        top: max(80px, env(safe-area-inset-top) + 80px);
+        left: max(20px, env(safe-area-inset-left) + 20px);
+    }
+    
+    .fab-top-right {
+        top: max(80px, env(safe-area-inset-top) + 80px);
+        right: max(20px, env(safe-area-inset-right) + 20px);
+    }
+    
+    .fab-bottom-left {
+        bottom: max(30px, env(safe-area-inset-bottom) + 30px);
+        left: max(20px, env(safe-area-inset-left) + 20px);
+    }
+    
+    .fab-bottom-right {
+        bottom: max(30px, env(safe-area-inset-bottom) + 30px);
+        right: max(20px, env(safe-area-inset-right) + 20px);
+    }
 }
