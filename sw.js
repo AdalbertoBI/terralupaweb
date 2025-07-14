@@ -1,118 +1,113 @@
-const CACHE_NAME = 'lupa-terra-v1.0.0';
+const CACHE_NAME = 'lupa-terra-v1.0.1';
 const urlsToCache = [
-  '/',
-  '/index.html',
-  '/style.css',
-  '/script.js',
-  '/filters.js',
-  '/shader.frag',
-  '/manifest.json',
-  '/icon-72x72.png',
-  '/icon-96x96.png',
-  '/icon-128x128.png',
-  '/icon-144x144.png',
-  '/icon-152x152.png',
-  '/icon-192x192.png',
-  '/icon-384x384.png',
-  '/icon-512x512.png',
-  '/logo.jpg'
+  './',
+  './index.html',
+  './style.css',
+  './script.js',
+  './filters.js',
+  './shader.frag',
+  './manifest.json',
+  './icon-72x72.png',
+  './icon-96x96.png',
+  './icon-128x128.png',
+  './icon-144x144.png',
+  './icon-152x152.png',
+  './icon-192x192.png',
+  './icon-384x384.png',
+  './icon-512x512.png',
+  './logo.jpg'
 ];
 
 // Instalação do Service Worker
 self.addEventListener('install', event => {
+  console.log('Service Worker: Instalando...');
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(cache => {
-        console.log('Cache aberto');
+        console.log('Service Worker: Cache aberto');
         return cache.addAll(urlsToCache);
       })
+      .then(() => {
+        console.log('Service Worker: Todos os arquivos em cache');
+        return self.skipWaiting();
+      })
       .catch(error => {
-        console.error('Erro ao adicionar arquivos ao cache:', error);
+        console.error('Service Worker: Erro ao adicionar arquivos ao cache:', error);
       })
   );
 });
 
 // Ativação do Service Worker
 self.addEventListener('activate', event => {
+  console.log('Service Worker: Ativando...');
   event.waitUntil(
     caches.keys().then(cacheNames => {
       return Promise.all(
         cacheNames.map(cacheName => {
           if (cacheName !== CACHE_NAME) {
-            console.log('Removendo cache antigo:', cacheName);
+            console.log('Service Worker: Removendo cache antigo:', cacheName);
             return caches.delete(cacheName);
           }
         })
       );
+    }).then(() => {
+      console.log('Service Worker: Ativado');
+      return self.clients.claim();
     })
   );
 });
 
-// Interceptação de requisições
+// Interceptação de requisições - Estratégia Network First para recursos dinâmicos
 self.addEventListener('fetch', event => {
-  event.respondWith(
-    caches.match(event.request)
-      .then(response => {
-        // Retorna do cache se encontrado
-        if (response) {
-          return response;
-        }
-        
-        // Clona a requisição
-        const fetchRequest = event.request.clone();
-        
-        return fetch(fetchRequest).then(response => {
-          // Verifica se a resposta é válida
-          if (!response || response.status !== 200 || response.type !== 'basic') {
-            return response;
-          }
-          
-          // Clona a resposta
-          const responseToCache = response.clone();
-          
-          caches.open(CACHE_NAME)
-            .then(cache => {
-              cache.put(event.request, responseToCache);
-            });
-          
-          return response;
-        }).catch(error => {
-          console.error('Erro na requisição:', error);
-          // Retorna uma resposta offline personalizada se necessário
-          if (event.request.destination === 'document') {
-            return caches.match('/index.html');
-          }
-        });
-      })
-  );
-});
-
-// Sincronização em background
-self.addEventListener('sync', event => {
-  if (event.tag === 'background-sync') {
-    event.waitUntil(doBackgroundSync());
-  }
-});
-
-function doBackgroundSync() {
-  // Implementar sincronização se necessário
-  return Promise.resolve();
-}
-
-// Notificações push (opcional)
-self.addEventListener('push', event => {
-  const options = {
-    body: event.data ? event.data.text() : 'Nova atualização disponível!',
-    icon: '/icon-192x192.png',
-    badge: '/icon-72x72.png',
-    vibrate: [100, 50, 100],
-    data: {
-      dateOfArrival: Date.now(),
-      primaryKey: 1
-    }
-  };
+  const url = new URL(event.request.url);
   
-  event.waitUntil(
-    self.registration.showNotification('Lupa Terra Web', options)
-  );
+  // Não interceptar requisições para getUserMedia ou WebRTC
+  if (event.request.url.includes('getUserMedia') || 
+      event.request.url.includes('webrtc') ||
+      event.request.url.includes('mediastream')) {
+    return;
+  }
+  
+  // Para recursos estáticos, usar cache first
+  if (event.request.destination === 'image' || 
+      event.request.destination === 'style' || 
+      event.request.destination === 'script' ||
+      event.request.destination === 'manifest') {
+    
+    event.respondWith(
+      caches.match(event.request)
+        .then(response => {
+          return response || fetch(event.request).then(fetchResponse => {
+            const responseClone = fetchResponse.clone();
+            caches.open(CACHE_NAME).then(cache => {
+              cache.put(event.request, responseClone);
+            });
+            return fetchResponse;
+          });
+        })
+        .catch(() => {
+          // Fallback para recursos essenciais
+          if (event.request.destination === 'document') {
+            return caches.match('./index.html');
+          }
+        })
+    );
+  } else {
+    // Para outros recursos, usar network first
+    event.respondWith(
+      fetch(event.request)
+        .then(response => {
+          if (response.status === 200) {
+            const responseClone = response.clone();
+            caches.open(CACHE_NAME).then(cache => {
+              cache.put(event.request, responseClone);
+            });
+          }
+          return response;
+        })
+        .catch(() => {
+          return caches.match(event.request);
+        })
+    );
+  }
 });

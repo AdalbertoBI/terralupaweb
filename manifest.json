@@ -2,76 +2,63 @@
   "name": "Lupa Terra Web - Câmera com Filtros",
   "short_name": "Lupa Terra",
   "description": "Aplicativo de câmera com zoom, filtros e controles avançados",
-  "start_url": "/",
+  "start_url": "./",
   "display": "standalone",
   "background_color": "#181c20",
   "theme_color": "#ffe600",
   "orientation": "portrait-primary",
-  "scope": "/",
+  "scope": "./",
   "lang": "pt-BR",
+  "id": "lupa-terra-web",
+  "categories": ["utilities", "photo"],
   "icons": [
     {
-      "src": "icon-72x72.png",
+      "src": "./icon-72x72.png",
       "sizes": "72x72",
       "type": "image/png",
-      "purpose": "maskable any"
+      "purpose": "any"
     },
     {
-      "src": "icon-96x96.png",
+      "src": "./icon-96x96.png",
       "sizes": "96x96",
       "type": "image/png",
-      "purpose": "maskable any"
+      "purpose": "any"
     },
     {
-      "src": "icon-128x128.png",
+      "src": "./icon-128x128.png",
       "sizes": "128x128",
       "type": "image/png",
-      "purpose": "maskable any"
+      "purpose": "any"
     },
     {
-      "src": "icon-144x144.png",
+      "src": "./icon-144x144.png",
       "sizes": "144x144",
       "type": "image/png",
-      "purpose": "maskable any"
+      "purpose": "any"
     },
     {
-      "src": "icon-152x152.png",
+      "src": "./icon-152x152.png",
       "sizes": "152x152",
       "type": "image/png",
-      "purpose": "maskable any"
+      "purpose": "any"
     },
     {
-      "src": "icon-192x192.png",
+      "src": "./icon-192x192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "maskable any"
+      "purpose": "any maskable"
     },
     {
-      "src": "icon-384x384.png",
+      "src": "./icon-384x384.png",
       "sizes": "384x384",
       "type": "image/png",
-      "purpose": "maskable any"
+      "purpose": "any"
     },
     {
-      "src": "icon-512x512.png",
+      "src": "./icon-512x512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "maskable any"
-    }
-  ],
-  "categories": ["utilities", "photo"],
-  "screenshots": [
-    {
-      "src": "screenshot1.png",
-      "sizes": "1280x720",
-      "type": "image/png",
-      "form_factor": "wide"
-    },
-    {
-      "src": "screenshot2.png",
-      "sizes": "720x1280",
-      "type": "image/png",
-      "form_factor": "narrow"
+      "purpose": "any maskable"
     }
   ]
 }
