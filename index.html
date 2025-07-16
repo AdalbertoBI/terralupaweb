@@ -2,239 +2,244 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Lupa Terra Web - Câmera com Filtros</title>
-    
-    <!-- PWA Meta Tags -->
-    <meta name="description" content="Aplicativo de câmera com zoom, filtros e controles avançados">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Lupa digital avançada para pessoas com deficiência visual e baixa visão">
+    <meta name="keywords" content="lupa, deficiência visual, baixa visão, acessibilidade, zoom, filtros">
+    <meta name="author" content="Lupa Terra Web">
     <meta name="theme-color" content="#ffe600">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Lupa Terra">
-    <meta name="msapplication-TileColor" content="#181c20">
-    <meta name="msapplication-TileImage" content="./icon-144x144.png">
+    <meta name="color-scheme" content="dark">
     
-    <!-- Apple Touch Icons -->
-    <link rel="apple-touch-icon" href="./icon-152x152.png">
-    <link rel="apple-touch-icon" sizes="72x72" href="./icon-72x72.png">
-    <link rel="apple-touch-icon" sizes="96x96" href="./icon-96x96.png">
-    <link rel="apple-touch-icon" sizes="128x128" href="./icon-128x128.png">
-    <link rel="apple-touch-icon" sizes="144x144" href="./icon-144x144.png">
-    <link rel="apple-touch-icon" sizes="152x152" href="./icon-152x152.png">
-    <link rel="apple-touch-icon" sizes="192x192" href="./icon-192x192.png">
-    <link rel="apple-touch-icon" sizes="384x384" href="./icon-384x384.png">
-    <link rel="apple-touch-icon" sizes="512x512" href="./icon-512x512.png">
-    
-    <!-- Favicon -->
-    <link rel="icon" type="image/png" sizes="32x32" href="./icon-72x72.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="./icon-72x72.png">
-    
-    <!-- Manifest -->
+    <!-- Security Headers -->
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+   
+
+    <!-- PWA Configuration -->
     <link rel="manifest" href="./manifest.json">
+    <link rel="icon" type="image/png" href="./icon-192x192.png">
+    <link rel="apple-touch-icon" href="./icon-192x192.png">
     
-    <link rel="stylesheet" href="./style.css">
+    <!-- Accessibility -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <title>Lupa Terra Web - Assistente Visual para Baixa Visão</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <!-- Banner de Instalação PWA Melhorado -->
-    <div id="installBanner" class="install-banner" style="display: none;">
+    <!-- Skip Navigation -->
+    <a href="#main-content" class="skip-link">Pular para o conteúdo principal</a>
+    
+    <!-- PWA Install Banner -->
+    <div id="installBanner" class="install-banner" style="display: none;" role="banner" aria-label="Banner de instalação do aplicativo">
         <div class="install-content">
-            <img src="./icon-72x72.png" alt="Lupa Terra" class="install-icon">
+            <img src="./icon-192x192.png" alt="Ícone do Lupa Terra" class="install-icon">
             <div class="install-text">
                 <strong>Instalar Lupa Terra</strong>
                 <p>Adicione à tela inicial para acesso rápido</p>
             </div>
             <div class="install-buttons">
-                <button id="installBtn" class="install-btn-primary">Instalar</button>
-                <button id="dismissBtn" class="install-btn-secondary">Agora não</button>
+                <button id="installBtn" class="install-btn-primary" aria-label="Instalar aplicativo">Instalar</button>
+                <button id="dismissBtn" class="install-btn-secondary" aria-label="Dispensar instalação">Agora não</button>
             </div>
         </div>
     </div>
 
-    <!-- Banner para iOS -->
-    <div id="iosBanner" class="ios-banner" style="display: none;">
-        <div class="ios-content">
-            <img src="./icon-72x72.png" alt="Lupa Terra" class="install-icon">
-            <div class="ios-text">
+    <!-- iOS Install Instructions -->
+    <div id="iosInstallBanner" class="install-banner" style="display: none;" role="banner" aria-label="Instruções de instalação para iOS">
+        <div class="install-content">
+            <img src="./icon-192x192.png" alt="Ícone do Lupa Terra" class="install-icon">
+            <div class="install-text">
                 <strong>Instalar Lupa Terra</strong>
-                <p>Toque em <span class="ios-share">⎙</span> e depois em "Adicionar à Tela de Início"</p>
+                <p>Toque em <strong>⬆️</strong> e depois em "Adicionar à Tela de Início"</p>
             </div>
-            <button id="iosDismissBtn" class="install-btn-secondary">Entendi</button>
+            <div class="install-buttons">
+                <button id="iosInstallBtn" class="install-btn-primary" aria-label="Entendi as instruções">Entendi</button>
+            </div>
         </div>
     </div>
 
-    <header>
-        <img src="./logo.jpg" alt="Terra Eletrônica" class="logo">
-        <span class="brand">LUPA TERRA WEB</span>
+    <!-- Header -->
+    <header role="banner" aria-label="Cabeçalho do aplicativo">
+        <div class="header-content">
+            <img src="./logo.jpg" alt="Logo Lupa Terra" class="logo">
+            <h1 class="brand">Lupa Terra Web</h1>
+            <span class="accessibility-badge" aria-label="Aplicativo acessível">♿</span>
+        </div>
     </header>
 
-    <div id="videoContainer">
-        <video id="video" autoplay muted playsinline></video>
-        <canvas id="glCanvas"></canvas>
-    </div>
-
-    <!-- Controles de Zoom -->
-    <div id="zoomGroup" class="fab fab-top-left">
-        <button id="zoomIn">▲</button>
-        <span id="zoomValue">1</span>
-        <button id="zoomOut">▼</button>
-    </div>
-
-    <!-- Controles de Brilho -->
-    <div id="brightnessGroup" class="fab fab-bottom-left">
-        <button id="brightnessUp">▲</button>
-        <span id="brightnessValue">1</span>
-        <button id="brightnessDown">▼</button>
-    </div>
-
-    <!-- Controles de Filtro -->
-    <div id="colorGroup" class="fab fab-top-right">
-        <button id="colorPrev">◀️</button>
-        <span id="colorValue">normal</span>
-        <button id="colorNext">▶️</button>
-    </div>
-
-    <!-- Botão Central da Câmera -->
-    <div id="actionsGroup" class="fab fab-center">
-        <button id="cameraBtn">📷</button>
-        <select id="cameraSelect" style="display: none;"></select>
-    </div>
-
-    <!-- Botão Menu -->
-    <div class="fab fab-bottom-right">
-        <button id="redBtn">Menu</button>
-    </div>
-
-    <!-- Menu Popup -->
-    <div id="secondMenu" class="menu-popup">
-        <button id="secondFreeze">❄️ Congelar</button>
-        <button id="secondSave">💾 Salvar</button>
-        <button id="infoBtn">ℹ️ Info</button>
-        <button id="resetBtn">↺ Reset</button>
-        <button id="flashBtn">🔦 Lanterna</button>
-        <button id="muteBtn">🔇 Mute</button>
-        <button id="fpsBtn">ℹ️ FPS</button>
-    </div>
-
-    <script src="./filters.js"></script>
-    <script src="./script.js"></script>
-    <script>
-        // PWA Installation Logic Melhorado
-        let deferredPrompt;
-        let isInstallable = false;
-        const installBanner = document.getElementById('installBanner');
-        const iosBanner = document.getElementById('iosBanner');
-        const installBtn = document.getElementById('installBtn');
-        const dismissBtn = document.getElementById('dismissBtn');
-        const iosDismissBtn = document.getElementById('iosDismissBtn');
-
-        // Função para detectar iOS
-        function isIOS() {
-            return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-        }
-
-        // Função para detectar se está em modo standalone (já instalado)
-        function isStandalone() {
-            return window.matchMedia('(display-mode: standalone)').matches || 
-                   window.navigator.standalone === true;
-        }
-
-        // Detectar evento de instalação
-        window.addEventListener('beforeinstallprompt', (e) => {
-            console.log('beforeinstallprompt disparado');
-            e.preventDefault();
-            deferredPrompt = e;
-            isInstallable = true;
+    <!-- Main Content -->
+    <main id="main-content" role="main" aria-label="Conteúdo principal da câmera">
+        <div id="videoContainer" class="video-container" aria-label="Área de visualização da câmera">
+            <video id="video" autoplay playsinline muted aria-hidden="true" tabindex="-1"></video>
+            <canvas id="glCanvas" aria-label="Imagem da câmera com filtros aplicados"></canvas>
             
-            // Mostrar banner após 2 segundos se não foi dispensado
-            setTimeout(() => {
-                if (!localStorage.getItem('pwa-dismissed') && !isStandalone()) {
-                    installBanner.style.display = 'block';
-                    console.log('Banner de instalação mostrado');
-                }
-            }, 2000);
-        });
+            <!-- Camera Status -->
+            <div id="cameraStatus" class="camera-status" aria-live="polite" aria-atomic="true">
+                <span id="statusText">Carregando câmera...</span>
+                <div id="statusIndicator" class="status-indicator loading" aria-hidden="true"></div>
+            </div>
+            
+            <!-- Focus Indicator -->
+            <div id="focusIndicator" class="focus-indicator" aria-hidden="true"></div>
+        </div>
+    </main>
 
-        // Mostrar banner iOS se aplicável
-        window.addEventListener('load', () => {
-            setTimeout(() => {
-                if (isIOS() && !isStandalone() && !localStorage.getItem('ios-dismissed')) {
-                    iosBanner.style.display = 'block';
-                    console.log('Banner iOS mostrado');
-                }
-            }, 3000);
-        });
+    <!-- Control Groups -->
+    <div class="controls-area" role="region" aria-label="Controles da aplicação">
+        
+        <!-- Zoom Controls -->
+        <div id="zoomGroup" class="fab fab-top-left" role="group" aria-label="Controles de zoom">
+            <button id="zoomIn" class="control-btn" aria-label="Aumentar zoom. Zoom atual: 1x" aria-describedby="zoom-help">
+                <span aria-hidden="true">🔍+</span>
+            </button>
+            <span id="zoomValue" class="value-display" aria-live="polite">1</span>
+            <button id="zoomOut" class="control-btn" aria-label="Diminuir zoom. Zoom atual: 1x" aria-describedby="zoom-help">
+                <span aria-hidden="true">🔍-</span>
+            </button>
+            <div id="zoom-help" class="sr-only">Use os botões de zoom para ampliar ou reduzir a imagem</div>
+        </div>
 
-        // Botão de instalação
-        installBtn.addEventListener('click', async () => {
-            if (deferredPrompt) {
-                console.log('Iniciando instalação...');
-                deferredPrompt.prompt();
-                const { outcome } = await deferredPrompt.userChoice;
-                
-                console.log('Resultado da instalação:', outcome);
-                
-                if (outcome === 'accepted') {
-                    console.log('PWA instalada com sucesso');
-                }
-                
-                deferredPrompt = null;
-                installBanner.style.display = 'none';
-            }
-        });
+        <!-- Brightness Controls -->
+        <div id="brightnessGroup" class="fab fab-bottom-left" role="group" aria-label="Controles de brilho">
+            <button id="brightnessUp" class="control-btn" aria-label="Aumentar brilho. Brilho atual: 1" aria-describedby="brightness-help">
+                <span aria-hidden="true">☀️+</span>
+            </button>
+            <span id="brightnessValue" class="value-display" aria-live="polite">1</span>
+            <button id="brightnessDown" class="control-btn" aria-label="Diminuir brilho. Brilho atual: 1" aria-describedby="brightness-help">
+                <span aria-hidden="true">☀️-</span>
+            </button>
+            <div id="brightness-help" class="sr-only">Use os botões de brilho para ajustar a luminosidade da imagem</div>
+        </div>
 
-        // Botão de dispensar
-        dismissBtn.addEventListener('click', () => {
-            installBanner.style.display = 'none';
-            localStorage.setItem('pwa-dismissed', 'true');
-            console.log('Banner dispensado');
-        });
+        <!-- Color Filter Controls -->
+        <div id="colorGroup" class="fab fab-top-right" role="group" aria-label="Controles de filtros de cor">
+            <button id="colorNext" class="control-btn" aria-label="Próximo filtro de cor. Filtro atual: normal" aria-describedby="filter-help">
+                <span aria-hidden="true">🎨▶️</span>
+            </button>
+            <span id="colorValue" class="value-display" aria-live="polite">normal</span>
+            <button id="colorPrev" class="control-btn" aria-label="Filtro anterior. Filtro atual: normal" aria-describedby="filter-help">
+                <span aria-hidden="true">🎨◀️</span>
+            </button>
+            <div id="filter-help" class="sr-only">Use os botões de filtro para alterar as cores da imagem</div>
+        </div>
 
-        // Botão de dispensar iOS
-        iosDismissBtn.addEventListener('click', () => {
-            iosBanner.style.display = 'none';
-            localStorage.setItem('ios-dismissed', 'true');
-        });
+        <!-- Actions -->
+        <div id="actionsGroup" class="fab fab-bottom-right" role="group" aria-label="Ações da aplicação">
+            <button id="cameraBtn" class="control-btn" aria-label="Selecionar câmera" aria-describedby="camera-help">
+                <span aria-hidden="true">📹</span>
+            </button>
+            <select id="cameraSelect" class="camera-select" aria-label="Lista de câmeras disponíveis" style="display: none;">
+                <option value="">Selecione uma câmera</option>
+            </select>
+            <div id="camera-help" class="sr-only">Use este botão para escolher entre as câmeras disponíveis</div>
+        </div>
 
-        // Registrar Service Worker
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js')
-                    .then(registration => {
-                        console.log('Service Worker registrado com sucesso:', registration);
-                        
-                        // Verificar atualizações
-                        registration.addEventListener('updatefound', () => {
-                            const newWorker = registration.installing;
-                            newWorker.addEventListener('statechange', () => {
-                                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                                    console.log('Nova versão disponível');
-                                    if (confirm('Nova versão disponível! Recarregar?')) {
-                                        window.location.reload();
-                                    }
-                                }
-                            });
-                        });
-                    })
-                    .catch(error => {
-                        console.error('Erro ao registrar Service Worker:', error);
-                    });
-            });
-        }
+        <!-- Central Menu Button -->
+        <button id="redBtn" class="fab fab-center" aria-label="Abrir menu principal" aria-describedby="menu-help">
+            <span aria-hidden="true">📱</span>
+        </button>
+        <div id="menu-help" class="sr-only">Menu principal com opções adicionais</div>
+    </div>
 
-        // Detectar quando o app foi instalado
-        window.addEventListener('appinstalled', () => {
-            console.log('PWA foi instalada');
-            installBanner.style.display = 'none';
-            iosBanner.style.display = 'none';
-        });
+    <!-- Secondary Menu -->
+    <div id="secondMenu" class="menu-popup" role="dialog" aria-labelledby="menu-title" aria-hidden="true">
+        <h2 id="menu-title" class="menu-title">Menu Principal</h2>
+        <div class="menu-grid" role="group" aria-label="Opções do menu">
+            <button id="secondFreeze" class="menu-btn" aria-label="Congelar imagem atual">
+                <span aria-hidden="true">❄️</span>
+                <span>Congelar</span>
+            </button>
+            <button id="secondSave" class="menu-btn" aria-label="Salvar imagem atual">
+                <span aria-hidden="true">💾</span>
+                <span>Salvar</span>
+            </button>
+            <button id="infoBtn" class="menu-btn" aria-label="Informações da câmera">
+                <span aria-hidden="true">ℹ️</span>
+                <span>Info</span>
+            </button>
+            <button id="resetBtn" class="menu-btn" aria-label="Resetar todas as configurações">
+                <span aria-hidden="true">↺</span>
+                <span>Reset</span>
+            </button>
+            <button id="flashBtn" class="menu-btn" aria-label="Ligar/desligar lanterna">
+                <span aria-hidden="true">🔦</span>
+                <span>Lanterna</span>
+            </button>
+            <button id="muteBtn" class="menu-btn" aria-label="Silenciar/ativar sons">
+                <span aria-hidden="true">🔇</span>
+                <span>Mute</span>
+            </button>
+            <button id="fpsBtn" class="menu-btn" aria-label="Mostrar/ocultar FPS">
+                <span aria-hidden="true">ℹ️</span>
+                <span>FPS</span>
+            </button>
+            <button id="contrastBtn" class="menu-btn" aria-label="Alternar modo de alto contraste">
+                <span aria-hidden="true">⚫</span>
+                <span>Contraste</span>
+            </button>
+            <button id="helpBtn" class="menu-btn" aria-label="Ajuda e instruções">
+                <span aria-hidden="true">❓</span>
+                <span>Ajuda</span>
+            </button>
+        </div>
+        <button id="closeMenu" class="close-menu-btn" aria-label="Fechar menu">
+            <span aria-hidden="true">✕</span>
+        </button>
+    </div>
 
-        // Forçar mostrar banner para teste (remover em produção)
-        setTimeout(() => {
-            if (!isInstallable && !isStandalone() && !localStorage.getItem('pwa-dismissed')) {
-                console.log('Forçando exibição do banner para teste');
-                installBanner.style.display = 'block';
-            }
-        }, 5000);
-    </script>
+    <!-- Help Modal -->
+    <div id="helpModal" class="modal" role="dialog" aria-labelledby="help-title" aria-hidden="true">
+        <div class="modal-content">
+            <h2 id="help-title">Ajuda - Lupa Terra Web</h2>
+            <div class="help-content">
+                <section aria-labelledby="basic-usage">
+                    <h3 id="basic-usage">Uso Básico</h3>
+                    <ul>
+                        <li><strong>Zoom:</strong> Use os botões 🔍+ e 🔍- para ampliar e reduzir</li>
+                        <li><strong>Brilho:</strong> Use os botões ☀️+ e ☀️- para ajustar a luminosidade</li>
+                        <li><strong>Filtros:</strong> Use os botões 🎨▶️ e 🎨◀️ para alterar as cores</li>
+                        <li><strong>Menu:</strong> Toque no botão central 📱 para mais opções</li>
+                    </ul>
+                </section>
+                <section aria-labelledby="accessibility-features">
+                    <h3 id="accessibility-features">Recursos de Acessibilidade</h3>
+                    <ul>
+                        <li><strong>Alto Contraste:</strong> Ative no menu para melhor visibilidade</li>
+                        <li><strong>Botões Grandes:</strong> Interface otimizada para baixa visão</li>
+                        <li><strong>Feedback Sonoro:</strong> Sons indicam as ações realizadas</li>
+                        <li><strong>Leitor de Tela:</strong> Compatível com tecnologias assistivas</li>
+                    </ul>
+                </section>
+                <section aria-labelledby="keyboard-shortcuts">
+                    <h3 id="keyboard-shortcuts">Atalhos de Teclado</h3>
+                    <ul>
+                        <li><strong>Espaço:</strong> Congelar/descongelar imagem</li>
+                        <li><strong>S:</strong> Salvar imagem</li>
+                        <li><strong>+ / -:</strong> Zoom</li>
+                        <li><strong>↑ / ↓:</strong> Brilho</li>
+                        <li><strong>← / →:</strong> Filtros</li>
+                        <li><strong>Esc:</strong> Fechar menus</li>
+                    </ul>
+                </section>
+            </div>
+            <button id="closeHelp" class="close-btn" aria-label="Fechar ajuda">Fechar</button>
+        </div>
+    </div>
+
+    <!-- Notification Area -->
+    <div id="notifications" class="notification-area" aria-live="assertive" aria-atomic="true"></div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay" aria-hidden="true">
+        <div class="loading-content">
+            <div class="loading-spinner" aria-hidden="true"></div>
+            <p id="loadingText">Carregando...</p>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="filters.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>

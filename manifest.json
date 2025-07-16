@@ -1,64 +1,104 @@
 {
-  "name": "Lupa Terra Web - Câmera com Filtros",
-  "short_name": "Lupa Terra",
-  "description": "Aplicativo de câmera com zoom, filtros e controles avançados",
-  "start_url": "./",
-  "display": "standalone",
-  "background_color": "#181c20",
-  "theme_color": "#ffe600",
-  "orientation": "portrait-primary",
-  "scope": "./",
-  "lang": "pt-BR",
-  "id": "lupa-terra-web",
-  "categories": ["utilities", "photo"],
-  "icons": [
-    {
-      "src": "./icon-72x72.png",
-      "sizes": "72x72",
-      "type": "image/png",
-      "purpose": "any"
+    "name": "Lupa Terra Web - Assistente Visual Acessível",
+    "short_name": "Lupa Terra",
+    "description": "Aplicativo de lupa digital avançada para pessoas com deficiência visual e baixa visão, com filtros de cor, zoom e controles acessíveis",
+    "start_url": "./index.html",
+    "display": "standalone",
+    "background_color": "#181c20",
+    "theme_color": "#ffe600",
+    "orientation": "portrait-primary",
+    "scope": "./",
+    "lang": "pt-BR",
+    "id": "lupa-terra-web-acessivel",
+    "categories": ["utilities", "photo", "accessibility", "medical"],
+    "screenshots": [
+        {
+            "src": "./screenshot-mobile.png",
+            "sizes": "360x640",
+            "type": "image/png",
+            "platform": "mobile"
+        },
+        {
+            "src": "./screenshot-desktop.png",
+            "sizes": "1280x720",
+            "type": "image/png",
+            "platform": "wide"
+        }
+    ],
+    "shortcuts": [
+        {
+            "name": "Iniciar Lupa",
+            "short_name": "Lupa",
+            "description": "Iniciar a lupa digital",
+            "url": "./index.html",
+            "icons": [
+                {
+                    "src": "./icon-96x96.png",
+                    "sizes": "96x96"
+                }
+            ]
+        }
+    ],
+    "icons": [
+        {
+            "src": "./icon-72x72.png",
+            "sizes": "72x72",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "./icon-96x96.png",
+            "sizes": "96x96",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "./icon-128x128.png",
+            "sizes": "128x128",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "./icon-144x144.png",
+            "sizes": "144x144",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "./icon-152x152.png",
+            "sizes": "152x152",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "./icon-192x192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "./icon-384x384.png",
+            "sizes": "384x384",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "./icon-512x512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any maskable"
+        }
+    ],
+    "related_applications": [],
+    "prefer_related_applications": false,
+    "iarc_rating_id": "e84b072d-71b3-4d3e-86ae-31a8ce4e53b7",
+    "edge_side_panel": {
+        "preferred_width": 400
     },
-    {
-      "src": "./icon-96x96.png",
-      "sizes": "96x96",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "./icon-128x128.png",
-      "sizes": "128x128",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "./icon-144x144.png",
-      "sizes": "144x144",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "./icon-152x152.png",
-      "sizes": "152x152",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "./icon-192x192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "./icon-384x384.png",
-      "sizes": "384x384",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "./icon-512x512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
-    }
-  ]
+    "protocol_handlers": [
+        {
+            "protocol": "web+lupa",
+            "url": "./index.html?protocol=%s"
+        }
+    ]
 }

@@ -1,57 +1,122 @@
-let zoom = 1, brightness = 1, filterIndex = 0, frozen = false, stream = null, hideTimeout = null, muted = false, showFPS = false;
-
+// ========== VARIÁVEIS GLOBAIS SEGURAS ==========
+let zoom = 1, brightness = 1, filterIndex = 0, frozen = false, stream = null;
+let hideTimeout = null, muted = false, showFPS = false, highContrast = false;
 let frameCount = 0, frameTimeStart = 0, frameTimeSum = 0, frameAverageRate = 0;
+let isInitialized = false, permissionGranted = false;
 
-const glCanvas = document.getElementById('glCanvas');
-const video = document.getElementById('video');
-const brightnessValue = document.getElementById('brightnessValue');
-const zoomValue = document.getElementById('zoomValue');
-const colorValue = document.getElementById('colorValue');
-const freezeBtn = document.getElementById('secondFreeze');
-const cameraBtn = document.getElementById('cameraBtn');
-const cameraSelect = document.getElementById('cameraSelect');
-const fpsBtn = document.getElementById('fpsBtn');
+// ========== ELEMENTOS DOM SEGUROS ==========
+const elements = {
+    glCanvas: document.getElementById('glCanvas'),
+    video: document.getElementById('video'),
+    brightnessValue: document.getElementById('brightnessValue'),
+    zoomValue: document.getElementById('zoomValue'),
+    colorValue: document.getElementById('colorValue'),
+    cameraSelect: document.getElementById('cameraSelect'),
+    cameraStatus: document.getElementById('cameraStatus'),
+    statusText: document.getElementById('statusText'),
+    statusIndicator: document.getElementById('statusIndicator'),
+    focusIndicator: document.getElementById('focusIndicator'),
+    notifications: document.getElementById('notifications'),
+    loadingOverlay: document.getElementById('loadingOverlay'),
+    loadingText: document.getElementById('loadingText'),
+    helpModal: document.getElementById('helpModal'),
+    secondMenu: document.getElementById('secondMenu')
+};
 
-const groups = [
-    document.getElementById('brightnessGroup'),
-    document.getElementById('zoomGroup'),
-    document.getElementById('colorGroup'),
-    document.getElementById('actionsGroup'),
-    document.getElementById('redBtn')
-];
+// ========== CONFIGURAÇÕES AVANÇADAS DE CÂMERA ==========
+const ADVANCED_CAMERA_CONSTRAINTS = {
+    video: {
+        width: { ideal: 3840, min: 1920 },
+        height: { ideal: 2160, min: 1080 },
+        frameRate: { ideal: 60, min: 30 },
+        facingMode: 'environment',
+        focusMode: 'continuous',
+        exposureMode: 'continuous',
+        whiteBalanceMode: 'continuous',
+        autoGainControl: true,
+        noiseSuppression: true,
+        echoCancellation: false,
+        latency: 0.01,
+        aspectRatio: 16/9
+    }
+};
 
-const header = document.querySelector('header');
-const redBtn = document.getElementById('redBtn');
-const secondMenu = document.getElementById('secondMenu');
+// ========== FILTROS SEGUROS ==========
+const FILTER_CONFIGS = {
+    names: [
+        "normal", "vermelho", "verde", "azul", "grayscale", "invert", 
+        "sepia", "solarize", "blur", "sharpen", "vintage", "posterize",
+        "yellow-invert", "green-dominant", "blue-yellow-post", 
+        "gray-natural", "black-white-hard", "black-white-soft", "blue-vibrant"
+    ],
+    descriptions: [
+        "Visualização normal", "Filtro vermelho", "Filtro verde", "Filtro azul",
+        "Escala de cinza", "Cores invertidas", "Sépia vintage", "Solarização",
+        "Desfoque suave", "Nitidez aumentada", "Efeito vintage", "Posterização",
+        "Amarelo-preto", "Verde dominante", "Azul-amarelo", "Cinza natural",
+        "Preto e branco alto contraste", "Preto e branco suave", "Azul vibrante"
+    ]
+};
 
-// TODOS OS 19 FILTROS IMPLEMENTADOS
-const filterNames = [
-    "normal",              // 0
-    "vermelho",            // 1
-    "verde",               // 2
-    "azul",                // 3
-    "grayscale",           // 4
-    "invert",              // 5
-    "sepia",               // 6
-    "solarize",            // 7
-    "blur",                // 8
-    "sharpen",             // 9
-    "vintage",             // 10
-    "posterize",           // 11
-    "yellow-invert",       // 12 - Filtro amarelo com preto
-    "green-dominant",      // 13 - Filtro verde dominante
-    "blue-yellow-post",    // 14 - Filtro azul-amarelo posterizado
-    "gray-natural",        // 15 - Cinza natural (nova imagem 1)
-    "black-white-hard",    // 16 - Preto e branco alto contraste (nova imagem 2)
-    "black-white-soft",    // 17 - Preto e branco suavizado (nova imagem 3)
-    "blue-vibrant"         // 18 - Azul vibrante (nova imagem 4)
-];
+// ========== UTILIDADES SEGURAS ==========
+function sanitizeInput(input) {
+    if (typeof input !== 'string') return String(input);
+    return input.replace(/[<>'"&]/g, '');
+}
 
-// ========== FILTROS BÁSICOS ==========
+function validateNumber(value, min, max) {
+    const num = parseFloat(value);
+    return isNaN(num) ? min : Math.max(min, Math.min(max, num));
+}
 
+function showNotification(message, type = 'info', duration = 3000) {
+    const notification = document.createElement('div');
+    notification.className = `notification notification-${type}`;
+    notification.textContent = sanitizeInput(message);
+    notification.setAttribute('role', 'alert');
+    notification.setAttribute('aria-live', 'assertive');
+    
+    elements.notifications.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.classList.add('show');
+    }, 100);
+    
+    setTimeout(() => {
+        notification.classList.remove('show');
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.parentNode.removeChild(notification);
+            }
+        }, 300);
+    }, duration);
+}
+
+function updateCameraStatus(status, type = 'info') {
+    if (elements.statusText) {
+        elements.statusText.textContent = sanitizeInput(status);
+    }
+    if (elements.statusIndicator) {
+        elements.statusIndicator.className = `status-indicator ${type}`;
+    }
+}
+
+function showLoading(text = 'Carregando...') {
+    elements.loadingText.textContent = sanitizeInput(text);
+    elements.loadingOverlay.style.display = 'flex';
+    elements.loadingOverlay.setAttribute('aria-hidden', 'false');
+}
+
+function hideLoading() {
+    elements.loadingOverlay.style.display = 'none';
+    elements.loadingOverlay.setAttribute('aria-hidden', 'true');
+}
+
+// ========== FUNÇÕES DE FILTRO OTIMIZADAS ==========
 function applyGrayscale(imageData) {
     const data = imageData.data;
-    for (let i = 0; i < data.length; i += 4) {
+    const len = data.length;
+    for (let i = 0; i < len; i += 4) {
         const gray = data[i] * 0.299 + data[i + 1] * 0.587 + data[i + 2] * 0.114;
         data[i] = gray;
         data[i + 1] = gray;
@@ -62,7 +127,8 @@ function applyGrayscale(imageData) {
 
 function applyInvert(imageData) {
     const data = imageData.data;
-    for (let i = 0; i < data.length; i += 4) {
+    const len = data.length;
+    for (let i = 0; i < len; i += 4) {
         data[i] = 255 - data[i];
         data[i + 1] = 255 - data[i + 1];
         data[i + 2] = 255 - data[i + 2];
@@ -70,310 +136,144 @@ function applyInvert(imageData) {
     return imageData;
 }
 
-function applySepia(imageData) {
+function applyHighContrast(imageData) {
     const data = imageData.data;
-    for (let i = 0; i < data.length; i += 4) {
+    const len = data.length;
+    for (let i = 0; i < len; i += 4) {
         const r = data[i];
         const g = data[i + 1];
         const b = data[i + 2];
-        
-        data[i] = Math.min(255, (r * 0.393) + (g * 0.769) + (b * 0.189));
-        data[i + 1] = Math.min(255, (r * 0.349) + (g * 0.686) + (b * 0.168));
-        data[i + 2] = Math.min(255, (r * 0.272) + (g * 0.534) + (b * 0.131));
+        const luminance = (r * 0.299 + g * 0.587 + b * 0.114);
+        if (luminance > 128) {
+            data[i] = 255; data[i + 1] = 255; data[i + 2] = 255;
+        } else {
+            data[i] = 0; data[i + 1] = 0; data[i + 2] = 0;
+        }
     }
     return imageData;
 }
 
-function applySolarize(imageData) {
+function applyColorChannel(imageData, channel) {
     const data = imageData.data;
-    for (let i = 0; i < data.length; i += 4) {
-        data[i] = data[i] > 128 ? 255 - data[i] : data[i];
-        data[i + 1] = data[i + 1] > 128 ? 255 - data[i + 1] : data[i + 1];
-        data[i + 2] = data[i + 2] > 128 ? 255 - data[i + 2] : data[i + 2];
+    const len = data.length;
+    for (let i = 0; i < len; i += 4) {
+        switch (channel) {
+            case "vermelho":
+                data[i + 1] = 0; data[i + 2] = 0;
+                break;
+            case "verde":
+                data[i] = 0; data[i + 2] = 0;
+                break;
+            case "azul":
+                data[i] = 0; data[i + 1] = 0;
+                break;
+        }
     }
     return imageData;
 }
 
-function applyBlur(imageData) {
-    const data = imageData.data;
-    const width = imageData.width;
-    const height = imageData.height;
-    const output = new Uint8ClampedArray(data);
+// ========== RENDERIZAÇÃO AVANÇADA ==========
+function renderFrame() {
+    if (!elements.glCanvas || !elements.video || !isInitialized) return;
     
-    for (let y = 1; y < height - 1; y++) {
-        for (let x = 1; x < width - 1; x++) {
-            const idx = (y * width + x) * 4;
-            
-            for (let c = 0; c < 3; c++) {
-                let sum = 0;
-                for (let dy = -1; dy <= 1; dy++) {
-                    for (let dx = -1; dx <= 1; dx++) {
-                        const neighborIdx = ((y + dy) * width + (x + dx)) * 4;
-                        sum += data[neighborIdx + c];
-                    }
-                }
-                output[idx + c] = sum / 9;
-            }
+    measureAverageFrameRate();
+    
+    const ctx = elements.glCanvas.getContext('2d', {
+        willReadFrequently: true,
+        alpha: false,
+        desynchronized: true,
+        colorSpace: 'srgb'
+    });
+    
+    if (!ctx) return;
+    
+    // Configurações de alta qualidade
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+    
+    // Ajustar tamanho do canvas
+    if (elements.video.videoWidth > 0 && elements.video.videoHeight > 0) {
+        const videoWidth = elements.video.videoWidth;
+        const videoHeight = elements.video.videoHeight;
+        
+        if (elements.glCanvas.width !== videoWidth || elements.glCanvas.height !== videoHeight) {
+            elements.glCanvas.width = videoWidth;
+            elements.glCanvas.height = videoHeight;
+            elements.glCanvas.style.width = '100vw';
+            elements.glCanvas.style.height = '100vh';
         }
     }
     
-    for (let i = 0; i < data.length; i++) {
-        data[i] = output[i];
-    }
-    return imageData;
-}
-
-function applySharpen(imageData) {
-    const data = imageData.data;
-    const width = imageData.width;
-    const height = imageData.height;
-    const output = new Uint8ClampedArray(data);
-    
-    const kernel = [
-        0, -1, 0,
-        -1, 5, -1,
-        0, -1, 0
-    ];
-    
-    for (let y = 1; y < height - 1; y++) {
-        for (let x = 1; x < width - 1; x++) {
-            const idx = (y * width + x) * 4;
-            
-            for (let c = 0; c < 3; c++) {
-                let sum = 0;
-                let kernelIdx = 0;
+    if (!frozen && stream && elements.video.readyState >= 2) {
+        ctx.clearRect(0, 0, elements.glCanvas.width, elements.glCanvas.height);
+        
+        // Aplicar zoom
+        const zoomFactor = validateNumber(zoom, 1, 10);
+        const scaleFactor = 1 / Math.pow(1.15, zoomFactor - 1);
+        const srcW = elements.video.videoWidth * scaleFactor;
+        const srcH = elements.video.videoHeight * scaleFactor;
+        const srcX = (elements.video.videoWidth - srcW) / 2;
+        const srcY = (elements.video.videoHeight - srcH) / 2;
+        
+        // Aplicar brilho
+        const brightnessLevel = validateNumber(brightness, 1, 10);
+        const brightnessValue = 0.5 + (brightnessLevel - 1) * 0.15;
+        ctx.filter = `brightness(${brightnessValue})`;
+        
+        // Desenhar vídeo
+        ctx.drawImage(
+            elements.video,
+            srcX, srcY, srcW, srcH,
+            0, 0, elements.glCanvas.width, elements.glCanvas.height
+        );
+        
+        ctx.filter = 'none';
+        
+        // Aplicar filtros
+        if (filterIndex > 0 || highContrast) {
+            try {
+                let frame = ctx.getImageData(0, 0, elements.glCanvas.width, elements.glCanvas.height);
                 
-                for (let dy = -1; dy <= 1; dy++) {
-                    for (let dx = -1; dx <= 1; dx++) {
-                        const neighborIdx = ((y + dy) * width + (x + dx)) * 4;
-                        sum += data[neighborIdx + c] * kernel[kernelIdx];
-                        kernelIdx++;
+                if (highContrast) {
+                    frame = applyHighContrast(frame);
+                } else {
+                    const filterName = FILTER_CONFIGS.names[filterIndex];
+                    switch (filterName) {
+                        case "vermelho":
+                        case "verde":
+                        case "azul":
+                            frame = applyColorChannel(frame, filterName);
+                            break;
+                        case "grayscale":
+                            frame = applyGrayscale(frame);
+                            break;
+                        case "invert":
+                            frame = applyInvert(frame);
+                            break;
+                        // Adicionar outros filtros aqui
                     }
                 }
-                output[idx + c] = Math.max(0, Math.min(255, sum));
+                
+                ctx.putImageData(frame, 0, 0);
+            } catch (error) {
+                console.error('Erro ao aplicar filtro:', error);
             }
         }
     }
     
-    for (let i = 0; i < data.length; i++) {
-        data[i] = output[i];
+    // Exibir FPS
+    if (showFPS) {
+        ctx.fillStyle = '#ff0000';
+        ctx.font = 'bold 24px Inter, Arial, sans-serif';
+        ctx.strokeStyle = '#000000';
+        ctx.lineWidth = 2;
+        const fps = frameCount > 1 ? (1000 / (frameAverageRate / 9)).toFixed(1) : 0;
+        const fpsText = `FPS: ${fps}`;
+        ctx.strokeText(fpsText, 20, 50);
+        ctx.fillText(fpsText, 20, 50);
     }
-    return imageData;
-}
-
-function applyVintage(imageData) {
-    const data = imageData.data;
-    for (let i = 0; i < data.length; i += 4) {
-        const r = data[i];
-        const g = data[i + 1];
-        const b = data[i + 2];
-        
-        data[i] = Math.min(255, r * 1.1 + 20);
-        data[i + 1] = Math.min(255, g * 0.9 + 10);
-        data[i + 2] = Math.min(255, b * 0.8);
-    }
-    return imageData;
-}
-
-function applyPosterize(imageData) {
-    const data = imageData.data;
-    const levels = 6;
-    const step = 255 / (levels - 1);
     
-    for (let i = 0; i < data.length; i += 4) {
-        data[i] = Math.round(data[i] / step) * step;
-        data[i + 1] = Math.round(data[i + 1] / step) * step;
-        data[i + 2] = Math.round(data[i + 2] / step) * step;
-    }
-    return imageData;
-}
-
-// ========== FILTROS PERSONALIZADOS ANTERIORES ==========
-
-function applyYellowInvert(imageData) {
-    const data = imageData.data;
-    for (let i = 0; i < data.length; i += 4) {
-        const r = data[i];
-        const g = data[i + 1];
-        const b = data[i + 2];
-        
-        const luminance = (r * 0.299 + g * 0.587 + b * 0.114);
-        
-        if (luminance > 100) {
-            data[i] = 255;     // R
-            data[i + 1] = 255; // G
-            data[i + 2] = 0;   // B
-        } else {
-            data[i] = 0;       // R
-            data[i + 1] = 0;   // G
-            data[i + 2] = 0;   // B
-        }
-    }
-    return imageData;
-}
-
-function applyGreenDominant(imageData) {
-    const data = imageData.data;
-    for (let i = 0; i < data.length; i += 4) {
-        const r = data[i];
-        const g = data[i + 1];
-        const b = data[i + 2];
-        
-        const luminance = (r * 0.299 + g * 0.587 + b * 0.114);
-        
-        if (luminance > 80) {
-            data[i] = 0;       // R
-            data[i + 1] = 255; // G
-            data[i + 2] = 0;   // B
-        } else {
-            data[i] = 0;       // R
-            data[i + 1] = 0;   // G
-            data[i + 2] = 0;   // B
-        }
-    }
-    return imageData;
-}
-
-function applyBlueYellowPosterize(imageData) {
-    const data = imageData.data;
-    for (let i = 0; i < data.length; i += 4) {
-        const r = data[i];
-        const g = data[i + 1];
-        const b = data[i + 2];
-        
-        const luminance = (r * 0.299 + g * 0.587 + b * 0.114);
-        
-        if (luminance > 170) {
-            data[i] = 255;     // R - Amarelo
-            data[i + 1] = 255; // G
-            data[i + 2] = 0;   // B
-        } else if (luminance > 85) {
-            data[i] = 0;       // R - Azul
-            data[i + 1] = 0;   // G
-            data[i + 2] = 255; // B
-        } else {
-            data[i] = 0;       // R - Preto
-            data[i + 1] = 0;   // G
-            data[i + 2] = 0;   // B
-        }
-    }
-    return imageData;
-}
-
-// ========== NOVOS FILTROS BASEADOS NAS 4 IMAGENS ADICIONAIS ==========
-
-function applyGrayNatural(imageData) {
-    const data = imageData.data;
-    for (let i = 0; i < data.length; i += 4) {
-        const r = data[i];
-        const g = data[i + 1];
-        const b = data[i + 2];
-        
-        // Conversão grayscale natural preservando detalhes
-        const gray = (r * 0.299 + g * 0.587 + b * 0.114);
-        data[i] = gray;
-        data[i + 1] = gray;
-        data[i + 2] = gray;
-    }
-    return imageData;
-}
-
-function applyBlackWhiteHard(imageData) {
-    const data = imageData.data;
-    for (let i = 0; i < data.length; i += 4) {
-        const r = data[i];
-        const g = data[i + 1];
-        const b = data[i + 2];
-        
-        const luminance = (r * 0.299 + g * 0.587 + b * 0.114);
-        
-        // Threshold alto para contraste extremo
-        if (luminance > 140) {
-            data[i] = 255;     // R - Branco
-            data[i + 1] = 255; // G
-            data[i + 2] = 255; // B
-        } else {
-            data[i] = 0;       // R - Preto
-            data[i + 1] = 0;   // G
-            data[i + 2] = 0;   // B
-        }
-    }
-    return imageData;
-}
-
-function applyBlackWhiteSoft(imageData) {
-    const data = imageData.data;
-    for (let i = 0; i < data.length; i += 4) {
-        const r = data[i];
-        const g = data[i + 1];
-        const b = data[i + 2];
-        
-        const luminance = (r * 0.299 + g * 0.587 + b * 0.114);
-        
-        // Threshold médio para transições mais suaves
-        if (luminance > 100) {
-            data[i] = 255;     // R - Branco
-            data[i + 1] = 255; // G
-            data[i + 2] = 255; // B
-        } else {
-            data[i] = 0;       // R - Preto
-            data[i + 1] = 0;   // G
-            data[i + 2] = 0;   // B
-        }
-    }
-    return imageData;
-}
-
-function applyBlueVibrant(imageData) {
-    const data = imageData.data;
-    for (let i = 0; i < data.length; i += 4) {
-        const r = data[i];
-        const g = data[i + 1];
-        const b = data[i + 2];
-        
-        const luminance = (r * 0.299 + g * 0.587 + b * 0.114);
-        
-        if (luminance > 70) {
-            data[i] = 0;       // R - Azul vibrante
-            data[i + 1] = 0;   // G
-            data[i + 2] = 255; // B
-        } else {
-            data[i] = 0;       // R - Preto
-            data[i + 1] = 0;   // G
-            data[i + 2] = 0;   // B
-        }
-    }
-    return imageData;
-}
-
-function applyColorChannel(frame, channel) {
-    const d = frame.data;
-    for (let i = 0; i < d.length; i += 4) {
-        if (channel === "vermelho") {
-            d[i + 1] = 0; // G
-            d[i + 2] = 0; // B
-        } else if (channel === "verde") {
-            d[i] = 0; // R
-            d[i + 2] = 0; // B
-        } else if (channel === "azul") {
-            d[i] = 0; // R
-            d[i + 1] = 0; // G
-        }
-    }
-    return frame;
-}
-
-// ========== FUNÇÕES PRINCIPAIS ==========
-
-function indexMapper(value, inMin, inMax, outMin, outMax) {
-    return ((value - inMin) / (inMax - inMin)) * (outMax - outMin) + outMin;
-}
-
-function updateUI() {
-    if (brightnessValue) brightnessValue.textContent = brightness;
-    if (zoomValue) zoomValue.textContent = zoom;
-    if (colorValue) colorValue.textContent = filterNames[filterIndex];
-    renderFrame();
+    requestAnimationFrame(renderFrame);
 }
 
 function measureAverageFrameRate() {
@@ -383,6 +283,7 @@ function measureAverageFrameRate() {
         frameCount = 1;
         return;
     }
+    
     frameTimeSum += now - frameTimeStart;
     frameCount++;
     if (frameCount > 10) {
@@ -390,410 +291,493 @@ function measureAverageFrameRate() {
         frameTimeSum = 0;
         frameCount = 1;
     }
+    
     frameTimeStart = now;
 }
 
-function renderFrame() {
-    measureAverageFrameRate();
-    if (!glCanvas) return;
-    
-    const ctx = glCanvas.getContext('2d', { willReadFrequently: true });
-    if (!ctx) return;
-
-    if (!frozen && stream && video.readyState >= 2) {
-        if (!glCanvas.width || !glCanvas.height) {
-            glCanvas.width = video.videoWidth || window.innerWidth;
-            glCanvas.height = video.videoHeight || window.innerHeight;
-        }
-
-        if (video.videoWidth > 0 && video.videoHeight > 0) {
-            const zoomFactor = indexMapper(zoom, 1, 10, 1, 0.2);
-            const srcW = video.videoWidth * zoomFactor;
-            const srcH = video.videoHeight * zoomFactor;
-            const srcX = (video.videoWidth - srcW) / 2;
-            const srcY = (video.videoHeight - srcH) / 2;
-
-            ctx.filter = `brightness(${indexMapper(brightness, 1, 10, 0.5, 2)})`;
-            ctx.drawImage(
-                video,
-                srcX, srcY, srcW, srcH,
-                0, 0, glCanvas.width, glCanvas.height
-            );
-            ctx.filter = 'none';
-
-            // Aplica todos os filtros implementados
-            if (filterIndex > 0) {
-                try {
-                    let frame = ctx.getImageData(0, 0, glCanvas.width, glCanvas.height);
-                    
-                    switch (filterNames[filterIndex]) {
-                        case "vermelho":
-                            frame = applyColorChannel(frame, "vermelho");
-                            break;
-                        case "verde":
-                            frame = applyColorChannel(frame, "verde");
-                            break;
-                        case "azul":
-                            frame = applyColorChannel(frame, "azul");
-                            break;
-                        case "grayscale":
-                            frame = applyGrayscale(frame);
-                            break;
-                        case "invert":
-                            frame = applyInvert(frame);
-                            break;
-                        case "sepia":
-                            frame = applySepia(frame);
-                            break;
-                        case "solarize":
-                            frame = applySolarize(frame);
-                            break;
-                        case "blur":
-                            frame = applyBlur(frame);
-                            break;
-                        case "sharpen":
-                            frame = applySharpen(frame);
-                            break;
-                        case "vintage":
-                            frame = applyVintage(frame);
-                            break;
-                        case "posterize":
-                            frame = applyPosterize(frame);
-                            break;
-                        case "yellow-invert":
-                            frame = applyYellowInvert(frame);
-                            break;
-                        case "green-dominant":
-                            frame = applyGreenDominant(frame);
-                            break;
-                        case "blue-yellow-post":
-                            frame = applyBlueYellowPosterize(frame);
-                            break;
-                        // NOVOS FILTROS ADICIONADOS
-                        case "gray-natural":
-                            frame = applyGrayNatural(frame);
-                            break;
-                        case "black-white-hard":
-                            frame = applyBlackWhiteHard(frame);
-                            break;
-                        case "black-white-soft":
-                            frame = applyBlackWhiteSoft(frame);
-                            break;
-                        case "blue-vibrant":
-                            frame = applyBlueVibrant(frame);
-                            break;
-                    }
-                    
-                    ctx.putImageData(frame, 0, 0);
-                } catch (e) {
-                    console.error('Erro ao aplicar filtro:', e);
-                    alert('Erro ao aplicar filtro: ' + e.message);
-                }
-            }
-        } else {
-            ctx.fillStyle = 'yellow';
-            ctx.fillRect(0, 0, glCanvas.width, glCanvas.height);
-        }
-    } else {
-        ctx.fillStyle = 'blue';
-        ctx.fillRect(0, 0, glCanvas.width, glCanvas.height);
+// ========== FUNÇÕES DE CÂMERA SEGURAS ==========
+async function requestCameraPermission() {
+    try {
+        showLoading('Solicitando permissão para câmera...');
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        stream.getTracks().forEach(track => track.stop());
+        permissionGranted = true;
+        updateCameraStatus('Permissão concedida', 'success');
+        showNotification('Permissão de câmera concedida', 'success');
+        return true;
+    } catch (error) {
+        console.error('Erro ao solicitar permissão:', error);
+        updateCameraStatus('Permissão negada', 'error');
+        showNotification('Permissão de câmera necessária para usar o aplicativo', 'error');
+        return false;
+    } finally {
+        hideLoading();
     }
-
-    if (showFPS) {
-        ctx.fillStyle = 'red';
-        ctx.font = '20px Arial';
-        const fps = frameCount > 1 ? (1000 / (frameAverageRate / 9)).toFixed(1) : 0;
-        ctx.fillText(`fps: ${fps}`, 10, 30);
-    }
-
-    requestAnimationFrame(renderFrame);
 }
-
-// ========== CONTROLES E EVENT LISTENERS ==========
-
-document.getElementById('zoomIn').onclick = () => { if (zoom < 10) { zoom++; updateUI(); saveSettings(); playSound(); scaleButton('zoomIn'); } };
-document.getElementById('zoomOut').onclick = () => { if (zoom > 1) { zoom--; updateUI(); saveSettings(); playSound(); scaleButton('zoomOut'); } };
-document.getElementById('brightnessUp').onclick = () => { if (brightness < 10) { brightness++; updateUI(); saveSettings(); playSound(); scaleButton('brightnessUp'); } };
-document.getElementById('brightnessDown').onclick = () => { if (brightness > 1) { brightness--; updateUI(); saveSettings(); playSound(); scaleButton('brightnessDown'); } };
-document.getElementById('colorNext').onclick = () => { filterIndex = (filterIndex + 1) % filterNames.length; updateUI(); saveSettings(); playSound(); scaleButton('colorNext'); };
-document.getElementById('colorPrev').onclick = () => { filterIndex = (filterIndex - 1 + filterNames.length) % filterNames.length; updateUI(); saveSettings(); playSound(); scaleButton('colorPrev'); };
-
-freezeBtn.onclick = () => { toggleFreeze(); playSound(); scaleButton('secondFreeze'); };
-
-cameraBtn.onclick = () => {
-    cameraSelect.style.display = cameraSelect.style.display === 'none' ? 'block' : 'none';
-};
-
-cameraSelect.onchange = () => {
-    startCamera(cameraSelect.value);
-    cameraSelect.style.display = 'none';
-    saveSettings();
-    playSound();
-    scaleButton('cameraBtn');
-};
-
-function showElements() {
-    groups.forEach(g => g && g.classList.remove('hide'));
-    header && header.classList.remove('hide');
-    clearTimeout(hideTimeout);
-    hideTimeout = setTimeout(() => {
-        groups.forEach(g => g && g.classList.add('hide'));
-        header && header.classList.add('hide');
-    }, 8000);
-}
-
-['mousemove', 'touchstart', 'click'].forEach(ev => {
-    document.body.addEventListener(ev, showElements);
-});
-showElements();
-
-// ========== FUNÇÕES DE CÂMERA ==========
 
 async function listCameras() {
     try {
-        if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) {
-            alert('Seu navegador não suporta acesso a dispositivos de mídia.');
-            return;
+        if (!navigator.mediaDevices?.enumerateDevices) {
+            throw new Error('Navegador não suporta enumeração de dispositivos');
         }
-
+        
         const devices = await navigator.mediaDevices.enumerateDevices();
-        cameraSelect.innerHTML = '';
         const videoDevices = devices.filter(d => d.kind === 'videoinput');
         
-        if (videoDevices.length > 0) {
-            videoDevices.forEach((device, i) => {
-                const option = document.createElement('option');
-                option.value = device.deviceId;
-                option.text = device.label || `Câmera ${i + 1}`;
-                cameraSelect.appendChild(option);
-            });
-        } else {
-            alert('Nenhuma câmera detectada. Verifique as conexões ou permissões.');
-        }
-    } catch (e) {
-        console.error('Erro ao listar câmeras:', e);
-        alert('Erro ao listar câmeras: ' + e.message);
+        elements.cameraSelect.innerHTML = '<option value="">Selecione uma câmera</option>';
+        
+        videoDevices.forEach((device, index) => {
+            const option = document.createElement('option');
+            option.value = device.deviceId;
+            option.textContent = sanitizeInput(device.label || `Câmera ${index + 1}`);
+            elements.cameraSelect.appendChild(option);
+        });
+        
+        updateCameraStatus(`${videoDevices.length} câmera(s) encontrada(s)`, 'success');
+        return videoDevices.length > 0;
+    } catch (error) {
+        console.error('Erro ao listar câmeras:', error);
+        updateCameraStatus('Erro ao listar câmeras', 'error');
+        return false;
     }
 }
 
 async function startCamera(deviceId) {
     try {
-        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-            alert('Seu navegador não suporta acesso à câmera.');
-            return;
+        showLoading('Iniciando câmera...');
+        
+        if (!navigator.mediaDevices?.getUserMedia) {
+            throw new Error('Navegador não suporta acesso à câmera');
         }
-
+        
+        // Parar stream anterior
         if (stream) {
             stream.getTracks().forEach(track => track.stop());
         }
-
-        stream = await navigator.mediaDevices.getUserMedia({
-            video: { deviceId: deviceId ? { exact: deviceId } : undefined }
-        });
-
-        if (!stream) {
-            alert('Falha ao iniciar a câmera: stream inválido.');
-            return;
+        
+        // Configurações avançadas
+        const constraints = {
+            video: {
+                ...ADVANCED_CAMERA_CONSTRAINTS.video,
+                deviceId: deviceId ? { exact: deviceId } : undefined
+            }
+        };
+        
+        // Fallback para configurações básicas
+        try {
+            stream = await navigator.mediaDevices.getUserMedia(constraints);
+        } catch (error) {
+            console.warn('Configurações avançadas falharam, usando básicas:', error);
+            stream = await navigator.mediaDevices.getUserMedia({
+                video: {
+                    width: { ideal: 1920 },
+                    height: { ideal: 1080 },
+                    frameRate: { ideal: 30 }
+                }
+            });
         }
-
-        video.srcObject = stream;
-        video.play().catch(e => {
-            console.error('Erro ao reproduzir vídeo:', e);
-        });
-
-        video.oncanplay = () => {
-            glCanvas.style.display = 'block';
-            video.style.display = 'none';
-            updateUI();
+        
+        if (!stream) {
+            throw new Error('Falha ao obter stream da câmera');
+        }
+        
+        // Configurar vídeo
+        elements.video.srcObject = stream;
+        elements.video.playsInline = true;
+        elements.video.muted = true;
+        
+        // Eventos de vídeo
+        elements.video.onloadedmetadata = () => {
+            const width = elements.video.videoWidth;
+            const height = elements.video.videoHeight;
+            console.log(`Resolução da câmera: ${width}x${height}`);
+            updateCameraStatus(`Câmera ativa: ${width}x${height}`, 'success');
         };
-
-        video.onerror = (e) => {
-            console.error('Erro no vídeo:', e);
-            alert('Erro no vídeo: ' + e.message);
+        
+        elements.video.oncanplay = () => {
+            elements.glCanvas.style.display = 'block';
+            elements.video.style.display = 'none';
+            isInitialized = true;
+            
+            if (!frozen) {
+                renderFrame();
+            }
+            
+            showNotification('Câmera iniciada com sucesso', 'success');
         };
-    } catch (e) {
-        console.error('Erro ao acessar a câmera:', e);
-        alert('Erro ao acessar a câmera: ' + e.message);
+        
+        elements.video.onerror = (error) => {
+            console.error('Erro no vídeo:', error);
+            updateCameraStatus('Erro na câmera', 'error');
+            showNotification('Erro na câmera', 'error');
+        };
+        
+        await elements.video.play();
+        
+    } catch (error) {
+        console.error('Erro ao iniciar câmera:', error);
+        updateCameraStatus('Falha ao iniciar câmera', 'error');
+        showNotification('Erro ao iniciar câmera: ' + error.message, 'error');
+    } finally {
+        hideLoading();
     }
 }
 
-// ========== FUNÇÕES DE CONFIGURAÇÃO ==========
+// ========== FUNÇÕES DE INTERFACE ACESSÍVEL ==========
+function updateUI() {
+    // Atualizar valores
+    if (elements.brightnessValue) {
+        elements.brightnessValue.textContent = brightness;
+    }
+    if (elements.zoomValue) {
+        elements.zoomValue.textContent = zoom;
+    }
+    if (elements.colorValue) {
+        elements.colorValue.textContent = FILTER_CONFIGS.names[filterIndex];
+    }
+    
+    // Atualizar ARIA labels
+    updateARIALabels();
+}
 
+function updateARIALabels() {
+    const zoomInBtn = document.getElementById('zoomIn');
+    const zoomOutBtn = document.getElementById('zoomOut');
+    const brightnessUpBtn = document.getElementById('brightnessUp');
+    const brightnessDownBtn = document.getElementById('brightnessDown');
+    const colorNextBtn = document.getElementById('colorNext');
+    const colorPrevBtn = document.getElementById('colorPrev');
+    
+    if (zoomInBtn) {
+        zoomInBtn.setAttribute('aria-label', `Aumentar zoom. Zoom atual: ${zoom}x`);
+    }
+    if (zoomOutBtn) {
+        zoomOutBtn.setAttribute('aria-label', `Diminuir zoom. Zoom atual: ${zoom}x`);
+    }
+    if (brightnessUpBtn) {
+        brightnessUpBtn.setAttribute('aria-label', `Aumentar brilho. Brilho atual: ${brightness}`);
+    }
+    if (brightnessDownBtn) {
+        brightnessDownBtn.setAttribute('aria-label', `Diminuir brilho. Brilho atual: ${brightness}`);
+    }
+    if (colorNextBtn) {
+        colorNextBtn.setAttribute('aria-label', `Próximo filtro. Filtro atual: ${FILTER_CONFIGS.descriptions[filterIndex]}`);
+    }
+    if (colorPrevBtn) {
+        colorPrevBtn.setAttribute('aria-label', `Filtro anterior. Filtro atual: ${FILTER_CONFIGS.descriptions[filterIndex]}`);
+    }
+}
+
+// ========== CONTROLES SEGUROS ==========
+function setupControls() {
+    // Zoom
+    document.getElementById('zoomIn')?.addEventListener('click', () => {
+        if (zoom < 10) {
+            zoom++;
+            updateUI();
+            saveSettings();
+            playSound('success');
+            showNotification(`Zoom: ${zoom}x`, 'info', 1000);
+        }
+    });
+    
+    document.getElementById('zoomOut')?.addEventListener('click', () => {
+        if (zoom > 1) {
+            zoom--;
+            updateUI();
+            saveSettings();
+            playSound('success');
+            showNotification(`Zoom: ${zoom}x`, 'info', 1000);
+        }
+    });
+    
+    // Brilho
+    document.getElementById('brightnessUp')?.addEventListener('click', () => {
+        if (brightness < 10) {
+            brightness++;
+            updateUI();
+            saveSettings();
+            playSound('success');
+            showNotification(`Brilho: ${brightness}`, 'info', 1000);
+        }
+    });
+    
+    document.getElementById('brightnessDown')?.addEventListener('click', () => {
+        if (brightness > 1) {
+            brightness--;
+            updateUI();
+            saveSettings();
+            playSound('success');
+            showNotification(`Brilho: ${brightness}`, 'info', 1000);
+        }
+    });
+    
+    // Filtros
+    document.getElementById('colorNext')?.addEventListener('click', () => {
+        filterIndex = (filterIndex + 1) % FILTER_CONFIGS.names.length;
+        updateUI();
+        saveSettings();
+        playSound('success');
+        showNotification(`Filtro: ${FILTER_CONFIGS.descriptions[filterIndex]}`, 'info', 1500);
+    });
+    
+    document.getElementById('colorPrev')?.addEventListener('click', () => {
+        filterIndex = (filterIndex - 1 + FILTER_CONFIGS.names.length) % FILTER_CONFIGS.names.length;
+        updateUI();
+        saveSettings();
+        playSound('success');
+        showNotification(`Filtro: ${FILTER_CONFIGS.descriptions[filterIndex]}`, 'info', 1500);
+    });
+}
+
+// ========== ATALHOS DE TECLADO ==========
+function setupKeyboardShortcuts() {
+    document.addEventListener('keydown', (event) => {
+        if (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA') {
+            return;
+        }
+        
+        switch (event.key) {
+            case ' ':
+                event.preventDefault();
+                toggleFreeze();
+                break;
+            case 's':
+            case 'S':
+                event.preventDefault();
+                saveImage();
+                break;
+            case '+':
+            case '=':
+                event.preventDefault();
+                document.getElementById('zoomIn')?.click();
+                break;
+            case '-':
+            case '_':
+                event.preventDefault();
+                document.getElementById('zoomOut')?.click();
+                break;
+            case 'ArrowUp':
+                event.preventDefault();
+                document.getElementById('brightnessUp')?.click();
+                break;
+            case 'ArrowDown':
+                event.preventDefault();
+                document.getElementById('brightnessDown')?.click();
+                break;
+            case 'ArrowRight':
+                event.preventDefault();
+                document.getElementById('colorNext')?.click();
+                break;
+            case 'ArrowLeft':
+                event.preventDefault();
+                document.getElementById('colorPrev')?.click();
+                break;
+            case 'Escape':
+                event.preventDefault();
+                closeAllModals();
+                break;
+        }
+    });
+}
+
+// ========== FUNÇÕES DE ÁUDIO ACESSÍVEIS ==========
+function playSound(type = 'click') {
+    if (muted) return;
+    
+    try {
+        const context = new (window.AudioContext || window.webkitAudioContext)();
+        const oscillator = context.createOscillator();
+        const gainNode = context.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(context.destination);
+        
+        let frequency = 440;
+        let duration = 0.1;
+        
+        switch (type) {
+            case 'success':
+                frequency = 660;
+                duration = 0.15;
+                break;
+            case 'error':
+                frequency = 220;
+                duration = 0.2;
+                break;
+            case 'click':
+            default:
+                frequency = 440;
+                duration = 0.1;
+                break;
+        }
+        
+        oscillator.frequency.value = frequency;
+        oscillator.type = 'sine';
+        gainNode.gain.value = 0.1;
+        
+        oscillator.start();
+        oscillator.stop(context.currentTime + duration);
+        
+        oscillator.onended = () => context.close();
+    } catch (error) {
+        console.error('Erro ao reproduzir som:', error);
+    }
+}
+
+// ========== FUNÇÕES DE MENU ==========
+function toggleFreeze() {
+    frozen = !frozen;
+    if (frozen) {
+        const ctx = elements.glCanvas.getContext('2d');
+        if (elements.video.videoWidth > 0 && elements.video.videoHeight > 0) {
+            ctx.drawImage(elements.video, 0, 0, elements.glCanvas.width, elements.glCanvas.height);
+        }
+        showNotification('Imagem congelada', 'info');
+    } else {
+        showNotification('Imagem descongelada', 'info');
+    }
+    playSound('success');
+}
+
+function saveImage() {
+    try {
+        const ctx = elements.glCanvas.getContext('2d');
+        if (!frozen && elements.video.videoWidth > 0 && elements.video.videoHeight > 0) {
+            ctx.drawImage(elements.video, 0, 0, elements.glCanvas.width, elements.glCanvas.height);
+        }
+        
+        const link = document.createElement('a');
+        link.download = `lupa-terra-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.png`;
+        link.href = elements.glCanvas.toDataURL('image/png', 1.0);
+        link.click();
+        
+        showNotification('Imagem salva com sucesso!', 'success');
+        playSound('success');
+    } catch (error) {
+        console.error('Erro ao salvar imagem:', error);
+        showNotification('Erro ao salvar imagem', 'error');
+        playSound('error');
+    }
+}
+
+function toggleHighContrast() {
+    highContrast = !highContrast;
+    document.body.classList.toggle('high-contrast', highContrast);
+    showNotification(highContrast ? 'Alto contraste ativado' : 'Alto contraste desativado', 'info');
+    playSound('success');
+    saveSettings();
+}
+
+function closeAllModals() {
+    elements.helpModal.style.display = 'none';
+    elements.helpModal.setAttribute('aria-hidden', 'true');
+    elements.secondMenu.style.display = 'none';
+    elements.secondMenu.setAttribute('aria-hidden', 'true');
+}
+
+// ========== SALVAMENTO SEGURO ==========
 function saveSettings() {
     try {
-        localStorage.setItem('lupaTerraWeb', JSON.stringify({
-            zoom, brightness, filterIndex, cameraId: cameraSelect.value, muted, showFPS
-        }));
-    } catch (e) {
-        console.error('Erro ao salvar configurações:', e);
+        const settings = {
+            zoom: validateNumber(zoom, 1, 10),
+            brightness: validateNumber(brightness, 1, 10),
+            filterIndex: validateNumber(filterIndex, 0, FILTER_CONFIGS.names.length - 1),
+            muted: Boolean(muted),
+            showFPS: Boolean(showFPS),
+            highContrast: Boolean(highContrast),
+            cameraId: sanitizeInput(elements.cameraSelect.value || ''),
+            version: '2.0.0'
+        };
+        
+        localStorage.setItem('lupaTerraWebSecure', JSON.stringify(settings));
+    } catch (error) {
+        console.error('Erro ao salvar configurações:', error);
     }
 }
 
 function loadSettings() {
     try {
-        const s = JSON.parse(localStorage.getItem('lupaTerraWeb') || '{}');
-        zoom = s.zoom || 1;
-        brightness = s.brightness || 1;
-        filterIndex = s.filterIndex || 0;
-        muted = s.muted || false;
-        showFPS = s.showFPS || false;
+        const saved = localStorage.getItem('lupaTerraWebSecure');
+        if (saved) {
+            const settings = JSON.parse(saved);
+            
+            zoom = validateNumber(settings.zoom, 1, 10);
+            brightness = validateNumber(settings.brightness, 1, 10);
+            filterIndex = validateNumber(settings.filterIndex, 0, FILTER_CONFIGS.names.length - 1);
+            muted = Boolean(settings.muted);
+            showFPS = Boolean(settings.showFPS);
+            highContrast = Boolean(settings.highContrast);
+            
+            if (highContrast) {
+                document.body.classList.add('high-contrast');
+            }
+        }
+    } catch (error) {
+        console.error('Erro ao carregar configurações:', error);
+    }
+}
+
+// ========== INICIALIZAÇÃO SEGURA ==========
+async function initializeApp() {
+    try {
+        showLoading('Inicializando aplicação...');
         
-        const muteBtn = document.getElementById('muteBtn');
-        const fpsBtn = document.getElementById('fpsBtn');
-        
-        if (muteBtn) muteBtn.innerHTML = muted ? '🔊 Ligar Som' : '🔇 Mute';
-        if (fpsBtn) fpsBtn.innerHTML = showFPS ? 'ℹ️ Ocultar FPS' : 'ℹ️ FPS';
-    } catch (e) {
-        console.error('Erro ao carregar configurações:', e);
-    }
-}
-
-// ========== FUNÇÕES DE MENU ==========
-
-function toggleFreeze() {
-    frozen = !frozen;
-    if (frozen) {
-        glCanvas.style.display = 'none';
-        video.style.display = 'block';
-        const ctx = glCanvas.getContext('2d', { willReadFrequently: true });
-        if (video.videoWidth > 0 && video.videoHeight > 0) {
-            ctx.drawImage(video, 0, 0, glCanvas.width, glCanvas.height);
-        }
-    } else {
-        video.style.display = 'none';
-        glCanvas.style.display = 'block';
-    }
-}
-
-function saveImage() {
-    try {
-        const ctx = glCanvas.getContext('2d', { willReadFrequently: true });
-        if (!frozen && video.videoWidth > 0 && video.videoHeight > 0) {
-            ctx.drawImage(video, 0, 0, glCanvas.width, glCanvas.height);
-        }
-
-        const link = document.createElement('a');
-        link.download = 'lupa_terra_img.png';
-        link.href = glCanvas.toDataURL('image/png');
-        link.click();
-        alert('IMAGEM SALVA!');
-    } catch (e) {
-        console.error('Erro ao salvar imagem:', e);
-        alert('Erro ao salvar imagem: ' + e.message);
-    }
-}
-
-function showInfo() {
-    try {
-        const fps = video.srcObject?.getVideoTracks()[0]?.getSettings()?.frameRate;
-        alert(`Taxa de atualização: ${fps ? fps + ' fps' : 'Indisponível'}`);
-    } catch (e) {
-        console.error('Erro ao obter taxa de atualização:', e);
-        alert('Erro ao obter taxa de atualização: ' + e.message);
-    }
-}
-
-function resetConfig() {
-    zoom = 1;
-    brightness = 1;
-    filterIndex = 0;
-    muted = false;
-    showFPS = false;
-    updateUI();
-    saveSettings();
-    scaleButton('resetBtn');
-    
-    const muteBtn = document.getElementById('muteBtn');
-    const fpsBtn = document.getElementById('fpsBtn');
-    
-    if (muteBtn) muteBtn.innerHTML = '🔇 Mute';
-    if (fpsBtn) fpsBtn.innerHTML = 'ℹ️ FPS';
-}
-
-function toggleFlash() {
-    alert('Função de lanterna não suportada no navegador.');
-    scaleButton('flashBtn');
-}
-
-function toggleMute() {
-    muted = !muted;
-    scaleButton('muteBtn');
-    const muteBtn = document.getElementById('muteBtn');
-    if (muteBtn) muteBtn.innerHTML = muted ? '🔊 Ligar Som' : '🔇 Mute';
-    saveSettings();
-}
-
-function toggleFPS() {
-    showFPS = !showFPS;
-    scaleButton('fpsBtn');
-    const fpsBtn = document.getElementById('fpsBtn');
-    if (fpsBtn) fpsBtn.innerHTML = showFPS ? 'ℹ️ Ocultar FPS' : 'ℹ️ FPS';
-    saveSettings();
-}
-
-// ========== FUNÇÕES DE ÁUDIO E VISUAL ==========
-
-function playSound() {
-    if (muted) return;
-    try {
-        const ctx = new (window.AudioContext || window.webkitAudioContext)();
-        const o = ctx.createOscillator();
-        o.type = 'sine';
-        o.frequency.value = 880;
-        const g = ctx.createGain();
-        g.gain.value = 0.07;
-        o.connect(g).connect(ctx.destination);
-        o.start();
-        o.stop(ctx.currentTime + 0.08);
-        o.onended = () => ctx.close();
-    } catch (e) {
-        console.error('Erro ao reproduzir som:', e);
-    }
-}
-
-function scaleButton(id) {
-    const button = document.getElementById(id);
-    if (button) {
-        button.style.transform = 'scale(1.15)';
-        setTimeout(() => {
-            button.style.transform = 'scale(1)';
-        }, 200);
-    }
-}
-
-// ========== EVENT LISTENERS DO MENU ==========
-
-if (redBtn) {
-    redBtn.onclick = () => {
-        if (secondMenu) {
-            secondMenu.style.display = secondMenu.style.display === 'flex' ? 'none' : 'flex';
-            setTimeout(() => { secondMenu.style.display = 'none'; }, 5000);
-        }
-        scaleButton('redBtn');
-    };
-}
-
-document.getElementById('secondFreeze')?.addEventListener('click', () => { toggleFreeze(); scaleButton('secondFreeze'); });
-document.getElementById('secondSave')?.addEventListener('click', () => { saveImage(); scaleButton('secondSave'); });
-document.getElementById('infoBtn')?.addEventListener('click', () => { showInfo(); scaleButton('infoBtn'); });
-document.getElementById('resetBtn')?.addEventListener('click', () => { resetConfig(); });
-document.getElementById('flashBtn')?.addEventListener('click', () => { toggleFlash(); });
-document.getElementById('muteBtn')?.addEventListener('click', () => { toggleMute(); });
-document.getElementById('fpsBtn')?.addEventListener('click', () => { toggleFPS(); });
-
-// ========== INICIALIZAÇÃO ==========
-
-window.addEventListener('DOMContentLoaded', async () => {
-    try {
+        // Carregar configurações
         loadSettings();
-        await listCameras();
-        if (cameraSelect.options.length > 0) {
-            await startCamera(cameraSelect.value);
-        } else {
-            alert('Nenhuma câmera disponível. Verifique as conexões ou permissões.');
+        
+        // Configurar controles
+        setupControls();
+        setupKeyboardShortcuts();
+        
+        // Solicitar permissão
+        if (!await requestCameraPermission()) {
+            throw new Error('Permissão de câmera necessária');
         }
-    } catch (e) {
-        console.error('Erro na inicialização:', e);
-        alert('Erro na inicialização: ' + e.message);
+        
+        // Listar câmeras
+        await listCameras();
+        
+        // Iniciar câmera
+        if (elements.cameraSelect.options.length > 1) {
+            await startCamera(elements.cameraSelect.value);
+        } else {
+            await startCamera();
+        }
+        
+        // Atualizar UI
+        updateUI();
+        
+        showNotification('Aplicação inicializada com sucesso!', 'success');
+        
+    } catch (error) {
+        console.error('Erro na inicialização:', error);
+        showNotification('Erro na inicialização: ' + error.message, 'error');
+    } finally {
+        hideLoading();
     }
+}
+
+// ========== EVENT LISTENERS ==========
+document.addEventListener('DOMContentLoaded', initializeApp);
+
+// Controle de visibilidade
+let visibilityTimeout;
+function showControls() {
+    document.querySelectorAll('.fab, header').forEach(el => {
+        el.classList.remove('hide');
+    });
+    
+    clearTimeout(visibilityTimeout);
+    visibilityTimeout = setTimeout(() => {
+        document.querySelectorAll('.fab, header').forEach(el => {
+            el.classList.add('hide');
+        });
+    }, 8000);
+}
+
+['mousemove', 'touchstart', 'click', 'keydown'].forEach(event => {
+    document.addEventListener(event, showControls);
 });
+
+showControls();
